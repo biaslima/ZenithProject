@@ -1,14 +1,3 @@
-# Generated Cmake Pico project file
-
-cmake_minimum_required(VERSION 3.13)
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Initialise pico_sdk from installed location
-# (note this can come from environment, CMake cache etc)
-
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
@@ -23,9 +12,17 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico_w CACHE STRING "Board type")
+set(PICO_BOARD pico CACHE STRING "Board type")
 
-# Pull in Raspberry Pi Pico SDK (must be before project)
+# Generated Cmake Pico project file
+
+cmake_minimum_required(VERSION 3.13)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Initialise pico_sdk from installed location
 include(pico_sdk_import.cmake)
 
 project(ZenithProject C CXX ASM)
@@ -33,39 +30,44 @@ project(ZenithProject C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+# Adicionar executável e incluir todos os arquivos fonte do projeto
+add_executable(ZenithProject 
+    ZenithProject.c
+    src/periferico_setup.c
+    src/button_handler.c
+    src/anxiety_level.c
+    src/ssd1306.c
+)
 
-add_executable(ZenithProject ZenithProject.c inc/ssd1306.c)
-
+# Configurar nome e versão do programa
 pico_set_program_name(ZenithProject "ZenithProject")
 pico_set_program_version(ZenithProject "0.1")
 
-# Generate PIO header
+# Gerar cabeçalho PIO para a matriz de LEDs
 pico_generate_pio_header(ZenithProject ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(ZenithProject 0)
-pico_enable_stdio_usb(ZenithProject 0)
+# Habilitar saída via UART e USB para depuração
+pico_enable_stdio_uart(ZenithProject 1)
+pico_enable_stdio_usb(ZenithProject 1)
 
-# Add the standard library to the build
-target_link_libraries(ZenithProject
-        pico_stdlib)
+# Adicionar bibliotecas padrão ao projeto
+target_link_libraries(ZenithProject pico_stdlib)
 
-# Add the standard include files to the build
-target_include_directories(ZenithProject PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+# Incluir diretório de cabeçalhos personalizados (inc/)
+target_include_directories(ZenithProject PRIVATE ${CMAKE_CURRENT_LIST_DIR}/inc)
+
+# Adicionar bibliotecas específicas de hardware ao projeto
+target_link_libraries(ZenithProject 
+    hardware_pio 
+    hardware_gpio 
+    hardware_clocks 
+    hardware_i2c 
+    hardware_irq 
+    hardware_pwm 
+    hardware_adc
 )
 
-# Add any user requested libraries
-target_link_libraries(ZenithProject 
-        hardware_pio
-        hardware_gpio 
-        hardware_clocks
-        hardware_i2c
-        hardware_irq
-        hardware_pwm
-        hardware_adc
-        )
-
+# Gerar saídas extras (como .uf2)
 pico_add_extra_outputs(ZenithProject)
+
 
