@@ -1,5 +1,5 @@
-#include "inc/anxiety_level.h"
-#include "inc/config.h"
+#include "anxiety_level.h"
+#include "config.h"
 
 void determine_anxiety_level(void) {
     if (btn_a_ativo && btn_b_ativo) {

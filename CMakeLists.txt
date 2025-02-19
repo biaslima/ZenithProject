@@ -15,9 +15,7 @@ endif()
 set(PICO_BOARD pico CACHE STRING "Board type")
 
 # Generated Cmake Pico project file
-
 cmake_minimum_required(VERSION 3.13)
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -30,13 +28,20 @@ project(ZenithProject C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Adicionar executável e incluir todos os arquivos fonte do projeto
+# Adicionar executável. Note os caminhos dos arquivos fonte
 add_executable(ZenithProject 
-    ZenithProject.c
+    src/ZenithProject.c
     src/periferico_setup.c
     src/button_handler.c
     src/anxiety_level.c
     src/ssd1306.c
+    src/global_vars.c
+)
+
+# Incluir diretórios de cabeçalhos
+target_include_directories(ZenithProject PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/inc
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 # Configurar nome e versão do programa
@@ -44,26 +49,21 @@ pico_set_program_name(ZenithProject "ZenithProject")
 pico_set_program_version(ZenithProject "0.1")
 
 # Gerar cabeçalho PIO para a matriz de LEDs
-pico_generate_pio_header(ZenithProject ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(ZenithProject ${CMAKE_CURRENT_LIST_DIR}/src/ws2812.pio)
 
 # Habilitar saída via UART e USB para depuração
 pico_enable_stdio_uart(ZenithProject 1)
 pico_enable_stdio_usb(ZenithProject 1)
 
 # Adicionar bibliotecas padrão ao projeto
-target_link_libraries(ZenithProject pico_stdlib)
-
-# Incluir diretório de cabeçalhos personalizados (inc/)
-target_include_directories(ZenithProject PRIVATE ${CMAKE_CURRENT_LIST_DIR}/inc)
-
-# Adicionar bibliotecas específicas de hardware ao projeto
 target_link_libraries(ZenithProject 
-    hardware_pio 
-    hardware_gpio 
-    hardware_clocks 
-    hardware_i2c 
-    hardware_irq 
-    hardware_pwm 
+    pico_stdlib
+    hardware_pio
+    hardware_gpio
+    hardware_clocks
+    hardware_i2c
+    hardware_irq
+    hardware_pwm
     hardware_adc
 )
 

@@ -1,8 +1,15 @@
-#include "inc/periferico_setup.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "pico/time.h"
+#include "periferico_setup.h"
+#include "hardware/pio.h"
+#include "hardware/pwm.h"
+#include "hardware/adc.h"
 #include "ws2812.pio.h"
-#include "inc/config.h"
+#include "config.h"
+#include "hardware/i2c.h" 
+#include "pico/stdlib.h" 
 
-#define I2C_PORT i2c1 
 
 void gpio_setup(void) {
     gpio_init(LED_MATRIX_PIN);
