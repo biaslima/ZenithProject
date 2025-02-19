@@ -3,6 +3,8 @@
 #include "hardware/pio.h"
 #include "config.h"
 
+#define LED_MATRIX_MAX_INTENSITY 10  // Intensidade reduzida para matriz
+
 // Array para controle da matriz de LEDs
 static uint32_t led_matrix[NUM_LEDS];
 
@@ -34,7 +36,6 @@ static const bool circle_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
     }
 };
 
-// Função para atualizar a matriz com um padrão específico
 static void update_matrix_pattern(const bool pattern[MATRIX_SIZE][MATRIX_SIZE], uint8_t intensity) {
     uint32_t color = ((uint32_t)intensity << 16) | ((uint32_t)intensity << 8) | intensity;
     
@@ -45,20 +46,20 @@ static void update_matrix_pattern(const bool pattern[MATRIX_SIZE][MATRIX_SIZE], 
         }
     }
     
-    // Atualiza a matriz física de LEDs
     for (int i = 0; i < NUM_LEDS; i++) {
         pio_sm_put_blocking(pio0, 0, led_matrix[i]);
     }
 }
 
+// Função para o LED principal (11,12,13)
 void set_main_led_brightness(uint8_t brightness) {
-    pwm_set_gpio_level(LED_PIN_RED, 0);
+    pwm_set_gpio_level(LED_PIN_RED, 0);  // Mantém vermelho apagado
     pwm_set_gpio_level(LED_PIN_BLUE, brightness);
     pwm_set_gpio_level(LED_PIN_GREEN, brightness);
 }
 
+// Função para animar apenas a matriz de LEDs
 void update_led_animation(uint8_t intensity, bool breathing_in) {
-    // Define qual padrão usar baseado na intensidade
     int pattern_index;
     if (intensity < 85) {
         pattern_index = 0;
@@ -68,14 +69,9 @@ void update_led_animation(uint8_t intensity, bool breathing_in) {
         pattern_index = 2;
     }
     
-    // Calcula a intensidade proporcional para os LEDs
-    uint8_t led_intensity = (intensity * LED_BRIGHTNESS) / 255;
-    
-    // Atualiza o padrão da matriz
-    update_matrix_pattern(circle_patterns[pattern_index], led_intensity);
-    
-    // Atualiza o LED principal
-    set_main_led_brightness(led_intensity);
+    // Atualiza apenas a matriz de LEDs
+    uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
+    update_matrix_pattern(circle_patterns[pattern_index], matrix_intensity);
 }
 
 void clear_all_leds(void) {

@@ -106,7 +106,7 @@ int main() {
                 diaphragmatic_breathing(&ssd);
                 break;
             case 2:
-                // box_breathing(&ssd);
+                square_breathing(&ssd);
                 break;
             case 3:
                 // square_breathing(&ssd);

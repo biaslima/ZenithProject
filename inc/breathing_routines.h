@@ -16,6 +16,6 @@ typedef struct {
 
 // Funções para rotinas de respiração
 void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params);
-void diaphragmatic_breathing(ssd1306_t *ssd);  // Nível 1
-
+void diaphragmatic_breathing(ssd1306_t *ssd);  
+void square_breathing(ssd1306_t *ssd);
 #endif // BREATHING_ROUTINES_H
