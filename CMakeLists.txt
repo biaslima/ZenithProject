@@ -36,6 +36,8 @@ add_executable(ZenithProject
     src/anxiety_level.c
     src/ssd1306.c
     src/global_vars.c
+    src/breathing_routines.c
+    src/led_animation.c  
 )
 
 # Incluir diretórios de cabeçalhos

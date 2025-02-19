@@ -1,10 +1,17 @@
+#ifndef SSD1306_H
+#define SSD1306_H
+
 #include <stdlib.h>
-#include "pico/stdlib.h"
+#include <stdbool.h>
 #include "hardware/i2c.h"
 
-#define WIDTH 128
-#define HEIGHT 64
+// Definições de dimensões do display
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
+#define DISPLAY_PAGE_HEIGHT 8
+#define DISPLAY_NUM_PAGES (DISPLAY_HEIGHT / DISPLAY_PAGE_HEIGHT)
 
+// Comandos do display
 typedef enum {
     SET_CONTRAST = 0x81,
     SET_ENTIRE_ON = 0xA4,
@@ -25,8 +32,12 @@ typedef enum {
     SET_CHARGE_PUMP = 0x8D
 } ssd1306_command_t;
 
+// Estrutura do display
 typedef struct {
-    uint8_t width, height, pages, address;
+    uint8_t width;
+    uint8_t height;
+    uint8_t pages;
+    uint8_t address;
     i2c_inst_t *i2c_port;
     bool external_vcc;
     uint8_t *ram_buffer;
@@ -34,6 +45,7 @@ typedef struct {
     uint8_t port_buffer[2];
 } ssd1306_t;
 
+// Funções do display
 void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_vcc, uint8_t address, i2c_inst_t *i2c);
 void ssd1306_config(ssd1306_t *ssd);
 void ssd1306_command(ssd1306_t *ssd, uint8_t command);
@@ -47,5 +59,4 @@ void ssd1306_vline(ssd1306_t *ssd, uint8_t x, uint8_t y0, uint8_t y1, bool value
 void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y);
 void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y);
 
-// Adicionei a declaração da função write_to_display
-void write_to_display(ssd1306_t *ssd, const char* text);
+#endif // SSD1306_H

@@ -1,10 +1,12 @@
 #include "ssd1306.h"
 #include "font.h"
+#include <stdlib.h>
+#include <string.h>
 
 void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_vcc, uint8_t address, i2c_inst_t *i2c) {
     ssd->width = width;
     ssd->height = height;
-    ssd->pages = height / 8U;
+    ssd->pages = height / 8;
     ssd->address = address;
     ssd->i2c_port = i2c;
     ssd->bufsize = ssd->pages * ssd->width + 1;
@@ -13,6 +15,7 @@ void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_v
     ssd->port_buffer[0] = 0x80;
 }
 
+
 void ssd1306_config(ssd1306_t *ssd) {
     ssd1306_command(ssd, SET_DISP | 0x00);
     ssd1306_command(ssd, SET_MEM_ADDR);
@@ -20,7 +23,7 @@ void ssd1306_config(ssd1306_t *ssd) {
     ssd1306_command(ssd, SET_DISP_START_LINE | 0x00);
     ssd1306_command(ssd, SET_SEG_REMAP | 0x01);
     ssd1306_command(ssd, SET_MUX_RATIO);
-    ssd1306_command(ssd, HEIGHT - 1);
+    ssd1306_command(ssd, ssd->height - 1);
     ssd1306_command(ssd, SET_COM_OUT_DIR | 0x08);
     ssd1306_command(ssd, SET_DISP_OFFSET);
     ssd1306_command(ssd, 0x00);
