@@ -21,8 +21,19 @@
 
 // Pinos e Variáveis da Matriz de LEDs
 #define LED_MATRIX_PIN 7
-#define NUM_LEDS 25
 #define IS_RGBW false
+
+// Display
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
+#define MAX_CHARS_PER_LINE 16
+#define CHAR_HEIGHT 8
+#define CHAR_WIDTH 8
+
+// LED
+#define LED_MAX_BRIGHTNESS 255
+#define MATRIX_SIZE 5
+#define NUM_LEDS (MATRIX_SIZE * MATRIX_SIZE)
 
 // Variáveis globais
 // Em config.h

@@ -2,20 +2,23 @@
 #define BREATHING_ROUTINES_H
 
 #include "ssd1306.h"
-#include <stdbool.h>
-#include <stdint.h>
 
-// Estrutura para definir parâmetros de respiração
+typedef enum {
+    BREATHING_DIAPHRAGMATIC,
+    BREATHING_SQUARE
+} breathing_type_t;
+
 typedef struct {
-    uint32_t inspire_time;    // Tempo de inspiração em ms
-    uint32_t expire_time;     // Tempo de expiração em ms
-    uint8_t cycles;           // Número de ciclos
-    const char* name;         // Nome da técnica
-    uint32_t led_color;       // Cor para a matriz de LEDs
+    breathing_type_t type;
+    uint32_t inspire_time;
+    uint32_t expire_time;
+    uint32_t hold_time;
+    uint8_t cycles;
 } breathing_params_t;
 
-// Funções para rotinas de respiração
-void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params);
-void diaphragmatic_breathing(ssd1306_t *ssd);  
+extern breathing_type_t current_breathing_type;
+
+void diaphragmatic_breathing(ssd1306_t *ssd);
 void square_breathing(ssd1306_t *ssd);
-#endif // BREATHING_ROUTINES_H
+
+#endif

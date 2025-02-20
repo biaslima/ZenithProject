@@ -4,182 +4,163 @@
 #include "pico/stdlib.h"
 #include "config.h"
 
-// Função auxiliar para exibir texto em duas linhas
-void display_title(ssd1306_t *ssd, const char* text) {
+breathing_type_t current_breathing_type = BREATHING_DIAPHRAGMATIC;
+
+// Funções auxiliares para o display
+static void write_centered_text(ssd1306_t *ssd, const char* text, int y) {
+    int width = strlen(text) * 8;
+    int x = (DISPLAY_WIDTH - width) / 2;
+    ssd1306_draw_string(ssd, text, x, y);
+}
+
+static void display_two_lines(ssd1306_t *ssd, const char* line1, const char* line2) {
     ssd1306_fill(ssd, false);
     
-    // Para respiração diafragmática, quebra em duas linhas
-    const char* line1 = "RESPIRACAO";
-    const char* line2 = "DIAFRAGMATICA";
-    
-    // Calcula posição central para primeira linha
-    int width1 = strlen(line1) * 8;
-    int x1 = (DISPLAY_WIDTH - width1) / 2;
     int y1 = (DISPLAY_HEIGHT / 2) - 12;  // 12 pixels acima do centro
-    
-    // Calcula posição central para segunda linha
-    int width2 = strlen(line2) * 8;
-    int x2 = (DISPLAY_WIDTH - width2) / 2;
     int y2 = (DISPLAY_HEIGHT / 2) + 4;   // 4 pixels abaixo do centro
     
-    // Desenha as duas linhas
-    ssd1306_draw_string(ssd, line1, x1, y1);
-    ssd1306_draw_string(ssd, line2, x2, y2);
+    write_centered_text(ssd, line1, y1);
+    write_centered_text(ssd, line2, y2);
+    ssd1306_send_data(ssd);
+}
+static void wrap_text(const char* text, char* wrapped_text, int max_width) {
+    int text_len = strlen(text);
+    int current_line_len = 0;
+    int wrapped_index = 0;
+    
+    for (int i = 0; i < text_len; i++) {
+        if (current_line_len >= max_width && text[i] == ' ') {
+            wrapped_text[wrapped_index++] = '\n';
+            current_line_len = 0;
+        } else {
+            wrapped_text[wrapped_index++] = text[i];
+            current_line_len++;
+            
+            // Força quebra se palavra é maior que largura máxima
+            if (current_line_len >= max_width && text[i] != ' ' && 
+                (i + 1 < text_len && text[i + 1] != ' ')) {
+                wrapped_text[wrapped_index++] = '\n';
+                current_line_len = 0;
+            }
+        }
+    }
+    wrapped_text[wrapped_index] = '\0';
+}
+
+static void display_wrapped_message(ssd1306_t *ssd, const char* text) {
+    char wrapped_text[256];
+    wrap_text(text, wrapped_text, MAX_CHARS_PER_LINE);
+    
+    ssd1306_fill(ssd, false);
+    
+    // Primeiro, conte quantas linhas teremos
+    int num_lines = 1;  // Começa com 1 linha
+    for(int i = 0; wrapped_text[i]; i++) {
+        if(wrapped_text[i] == '\n') num_lines++;
+    }
+    
+    // Calcula a posição y inicial para centralizar verticalmente
+    int total_height = num_lines * (CHAR_HEIGHT + 2);  // altura total do texto
+    int start_y = (DISPLAY_HEIGHT - total_height) / 2;  // posição y inicial
+    
+    // Desenha cada linha
+    char* line = strtok(wrapped_text, "\n");
+    int current_y = start_y;
+    
+    while (line != NULL) {
+        int width = strlen(line) * CHAR_WIDTH;
+        int x = (DISPLAY_WIDTH - width) / 2;  // centraliza horizontalmente
+        if(x < 0) x = 0;
+        
+        ssd1306_draw_string(ssd, line, x, current_y);
+        current_y += CHAR_HEIGHT + 2;
+        line = strtok(NULL, "\n");
+    }
+    
     ssd1306_send_data(ssd);
 }
 
-void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) {
-    int x, y;
+// Funções de animação LED
+static void animate_breath_in(uint32_t duration) {
+    for (int i = 0; i <= LED_MAX_BRIGHTNESS; i++) {
+        update_led_animation(i, true);
+        sleep_ms(duration / LED_MAX_BRIGHTNESS);
+    }
+}
+
+static void animate_breath_out(uint32_t duration) {
+    for (int i = LED_MAX_BRIGHTNESS; i >= 0; i--) {
+        update_led_animation(i, false);
+        sleep_ms(duration / LED_MAX_BRIGHTNESS);
+    }
+}
+
+// Função genérica para respiração
+static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) {
+    // Mostra título inicial
+    const char *title_parts[2];
+    title_parts[0] = "RESPIRACAO";
+    title_parts[1] = params->type == BREATHING_DIAPHRAGMATIC ? "DIAFRAGMATICA" : "QUADRADA";
     
-    // Acende o LED central com intensidade baixa constante
-    set_main_led_brightness(32);  // Intensidade bem baixa (1/8 do máximo)
-    
-    // Exibe o título em duas linhas
-    display_title(ssd, params->name);
+    display_two_lines(ssd, title_parts[0], title_parts[1]);
     sleep_ms(3000);
-
-    y = (DISPLAY_HEIGHT - 8) / 2;
-
+    
+    // Acende LED central com intensidade baixa constante
+    set_main_led_brightness(32);
+    
+    // Executa os ciclos de respiração
     for (int cycle = 0; cycle < params->cycles; cycle++) {
-        // Inspiração centralizada
-        ssd1306_fill(ssd, false);
-        const char* inspire_text = "INSPIRE...";
-        int inspire_width = strlen(inspire_text) * 8;
-        x = (DISPLAY_WIDTH - inspire_width) / 2;
-        ssd1306_draw_string(ssd, inspire_text, x, y);
-        ssd1306_send_data(ssd);
-        
-        // Anima a matriz crescendo
-        for (int i = 0; i <= LED_MAX_BRIGHTNESS; i++) {
-            update_led_animation(i, true);
-            sleep_ms(params->inspire_time / LED_MAX_BRIGHTNESS);
-        }
-        
-        // Expiração centralizada
-        ssd1306_fill(ssd, false);
-        const char* expire_text = "EXPIRE...";
-        int expire_width = strlen(expire_text) * 8;
-        x = (DISPLAY_WIDTH - expire_width) / 2;
-        ssd1306_draw_string(ssd, expire_text, x, y);
-        ssd1306_send_data(ssd);
-        
-        // Anima a matriz diminuindo
-        for (int i = LED_MAX_BRIGHTNESS; i >= 0; i--) {
-            update_led_animation(i, false);
-            sleep_ms(params->expire_time / LED_MAX_BRIGHTNESS);
+        if (params->type == BREATHING_DIAPHRAGMATIC) {
+            // Respiração Diafragmática
+            display_wrapped_message(ssd, "INSPIRE...");
+            animate_breath_in(params->inspire_time);
+            
+            display_wrapped_message(ssd, "EXPIRE...");
+            animate_breath_out(params->expire_time);
+        } else {
+            // Respiração Quadrada
+            display_wrapped_message(ssd, "INSPIRE...");
+            animate_breath_in(params->inspire_time);
+            
+            display_wrapped_message(ssd, "SEGURE...");
+            sleep_ms(params->hold_time);
+            
+            display_wrapped_message(ssd, "EXPIRE...");
+            animate_breath_out(params->expire_time);
+            
+            display_wrapped_message(ssd, "MANTENHA VAZIO...");
+            sleep_ms(params->hold_time);
         }
     }
     
-    // Mensagem final centralizada
-    ssd1306_fill(ssd, false);
-    const char* final_text = "SESSAO CONCLUIDA";
-    int final_width = strlen(final_text) * 8;
-    x = (DISPLAY_WIDTH - final_width) / 2;
-    ssd1306_draw_string(ssd, final_text, x, y);
-    ssd1306_send_data(ssd);
+    // Finalização
+    display_wrapped_message(ssd, "SESSAO CONCLUIDA");
     sleep_ms(2000);
-    
     clear_all_leds();
+}
+
+// Funções principais de respiração
+void diaphragmatic_breathing(ssd1306_t *ssd) {
+    current_breathing_type = BREATHING_DIAPHRAGMATIC;
+    breathing_params_t params = {
+        .type = BREATHING_DIAPHRAGMATIC,
+        .inspire_time = 4000,    // 4 segundos
+        .expire_time = 6000,     // 6 segundos
+        .hold_time = 0,          // Sem pausa
+        .cycles = 5,             // 5 ciclos (~50 segundos)
+    };
+    
+    breathing_routine(ssd, &params);
 }
 
 void square_breathing(ssd1306_t *ssd) {
+    current_breathing_type = BREATHING_SQUARE;
     breathing_params_t params = {
+        .type = BREATHING_SQUARE,
         .inspire_time = 4000,    // 4 segundos
         .expire_time = 4000,     // 4 segundos
-        .cycles = 9,             // 9 ciclos (aprox. 2.5 minutos)
-        .name = "RESPIRACAO QUADRADA",
-        .led_color = BLUE_COLOR
-    };
-
-    int x, y;
-    
-    // Acende o LED central com intensidade baixa constante
-    set_main_led_brightness(32);
-    
-    // Exibe o título em duas linhas
-    ssd1306_fill(ssd, false);
-    const char* line1 = "RESPIRACAO";
-    const char* line2 = "QUADRADA";
-    
-    int width1 = strlen(line1) * 8;
-    int width2 = strlen(line2) * 8;
-    int x1 = (DISPLAY_WIDTH - width1) / 2;
-    int x2 = (DISPLAY_WIDTH - width2) / 2;
-    int y1 = (DISPLAY_HEIGHT / 2) - 12;
-    int y2 = (DISPLAY_HEIGHT / 2) + 4;
-    
-    ssd1306_draw_string(ssd, line1, x1, y1);
-    ssd1306_draw_string(ssd, line2, x2, y2);
-    ssd1306_send_data(ssd);
-    sleep_ms(3000);
-
-    y = (DISPLAY_HEIGHT - 8) / 2;
-
-    for (int cycle = 0; cycle < params.cycles; cycle++) {
-        // 1. Inspiração (4 segundos)
-        ssd1306_fill(ssd, false);
-        const char* inspire_text = "INSPIRE...";
-        int width = strlen(inspire_text) * 8;
-        x = (DISPLAY_WIDTH - width) / 2;
-        ssd1306_draw_string(ssd, inspire_text, x, y);
-        ssd1306_send_data(ssd);
-        
-        for (int i = 0; i <= LED_MAX_BRIGHTNESS; i++) {
-            update_led_animation(i, true);
-            sleep_ms(params.inspire_time / LED_MAX_BRIGHTNESS);
-        }
-        
-        // 2. Prenda a respiração (4 segundos)
-        ssd1306_fill(ssd, false);
-        const char* hold_text = "SEGURE...";
-        width = strlen(hold_text) * 8;
-        x = (DISPLAY_WIDTH - width) / 2;
-        ssd1306_draw_string(ssd, hold_text, x, y);
-        ssd1306_send_data(ssd);
-        sleep_ms(4000);  // Mantém o último padrão da matriz por 4 segundos
-        
-        // 3. Expiração (4 segundos)
-        ssd1306_fill(ssd, false);
-        const char* expire_text = "EXPIRE...";
-        width = strlen(expire_text) * 8;
-        x = (DISPLAY_WIDTH - width) / 2;
-        ssd1306_draw_string(ssd, expire_text, x, y);
-        ssd1306_send_data(ssd);
-        
-        for (int i = LED_MAX_BRIGHTNESS; i >= 0; i--) {
-            update_led_animation(i, false);
-            sleep_ms(params.expire_time / LED_MAX_BRIGHTNESS);
-        }
-        
-        // 4. Mantenha os pulmões vazios (4 segundos)
-        ssd1306_fill(ssd, false);
-        const char* empty_text = "MANTENHA VAZIO...";
-        width = strlen(empty_text) * 8;
-        x = (DISPLAY_WIDTH - width) / 2;
-        ssd1306_draw_string(ssd, empty_text, x, y);
-        ssd1306_send_data(ssd);
-        sleep_ms(4000);  // Mantém o padrão vazio por 4 segundos
-    }
-    
-    // Mensagem final
-    ssd1306_fill(ssd, false);
-    const char* final_text = "SESSAO CONCLUIDA";
-    int final_width = strlen(final_text) * 8;
-    x = (DISPLAY_WIDTH - final_width) / 2;
-    ssd1306_draw_string(ssd, final_text, x, y);
-    ssd1306_send_data(ssd);
-    sleep_ms(2000);
-    
-    clear_all_leds();
-}
-
-void diaphragmatic_breathing(ssd1306_t *ssd) {
-    breathing_params_t params = {
-        .inspire_time = 4000,    // 4 segundos
-        .expire_time = 6000,     // 6 segundos
-        .cycles = 5,             // 5 ciclos (~50 segundos)
-        .name = "RESPIRACAO DIAFRAGMATICA",
-        .led_color = BLUE_COLOR  // Azul suave para relaxamento
+        .hold_time = 4000,       // 4 segundos
+        .cycles = 9,             // 9 ciclos (~2.5 minutos)
     };
     
     breathing_routine(ssd, &params);
