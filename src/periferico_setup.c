@@ -51,7 +51,7 @@ void pwm_setup(void) {
 void adc_setup(void) {
     adc_init();
     adc_gpio_init(MIC_PIN);
-    adc_select_input(0);
+    adc_select_input(2);
 }
 
 void display_setup(void) {

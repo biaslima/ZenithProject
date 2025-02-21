@@ -38,6 +38,7 @@ add_executable(ZenithProject
     src/global_vars.c
     src/breathing_routines.c
     src/led_animation.c  
+    src/noise_detection.c
 )
 
 # Incluir diretórios de cabeçalhos

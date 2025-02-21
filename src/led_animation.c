@@ -8,6 +8,41 @@
 // Array para controle da matriz de LEDs
 static uint32_t led_matrix[NUM_LEDS];
 
+// Função para configurar o LED principal com cores específicas para cada tipo de respiração
+void set_main_led_for_breathing_type(breathing_type_t type) {
+    uint8_t intensity = 64;  // Intensidade constante e suave (1/4 da máxima)
+    
+    switch (type) {
+        case BREATHING_DIAPHRAGMATIC:
+            // Azul esverdeado para respiração diafragmática
+            pwm_set_gpio_level(LED_PIN_RED, 0);
+            pwm_set_gpio_level(LED_PIN_GREEN, intensity);
+            pwm_set_gpio_level(LED_PIN_BLUE, intensity + 20);  // Um pouco mais de azul
+            break;
+            
+        case BREATHING_SQUARE:
+            // Amarelo esverdeado para respiração quadrada
+            pwm_set_gpio_level(LED_PIN_RED, intensity);
+            pwm_set_gpio_level(LED_PIN_GREEN, intensity);
+            pwm_set_gpio_level(LED_PIN_BLUE, 0);
+            break;
+            
+        case BREATHING_CALM:
+            // Verde azulado para respiração 4-7-8
+            pwm_set_gpio_level(LED_PIN_RED, 0);
+            pwm_set_gpio_level(LED_PIN_GREEN, intensity + 20);  // Um pouco mais de verde
+            pwm_set_gpio_level(LED_PIN_BLUE, intensity);
+            break;
+            
+        default:
+            // Branco suave para qualquer outro caso
+            pwm_set_gpio_level(LED_PIN_RED, intensity/2);
+            pwm_set_gpio_level(LED_PIN_GREEN, intensity/2);
+            pwm_set_gpio_level(LED_PIN_BLUE, intensity/2);
+            break;
+    }
+}
+
 // Define os padrões de animação para diferentes tamanhos de círculo
 const bool circle_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
     // Círculo pequeno (centro)
@@ -142,25 +177,9 @@ void set_main_led_brightness(uint8_t brightness) {
 
 void update_led_animation(uint8_t intensity, bool breathing_in) {
     int pattern_index;
-    if (intensity < 85) {
-        pattern_index = 0;
-    } else if (intensity < 170) {
-        pattern_index = 1;
-    } else {
-        pattern_index = 2;
-    }
     
-    if (current_breathing_type == BREATHING_SQUARE) {
-        // LED principal em laranja para respiração quadrada
-        uint8_t red_intensity = intensity;
-        uint8_t green_intensity = intensity / 2;  // Metade da intensidade para tom laranja
-        pwm_set_gpio_level(LED_PIN_RED, red_intensity);
-        pwm_set_gpio_level(LED_PIN_GREEN, green_intensity);
-        pwm_set_gpio_level(LED_PIN_BLUE, 0);
-        
-        uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
-        update_matrix_pattern(square_patterns[pattern_index], matrix_intensity);
-    } else  if (current_breathing_type == BREATHING_CALM) {
+    // Determina o padrão da matriz baseado na intensidade
+    if (current_breathing_type == BREATHING_CALM) {
         // Mapeamento mais granular para a respiração calmante (5 estágios)
         if (intensity < 51) {
             pattern_index = 0;
@@ -174,32 +193,33 @@ void update_led_animation(uint8_t intensity, bool breathing_in) {
             pattern_index = 4;
         }
         
-        // Cores azul-turquesa suaves para respiração calmante
-        // Criando um efeito de transição suave
-        uint8_t blue_intensity = intensity;
-        uint8_t green_intensity = intensity / 2;  // Turquesa suave
-        
-        // Aplica uma mudança sutil na cor durante inspiração vs. expiração
-        if (breathing_in) {
-            // Tom mais azulado durante inspiração
-            pwm_set_gpio_level(LED_PIN_RED, 0);
-            pwm_set_gpio_level(LED_PIN_GREEN, green_intensity);
-            pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity);
-        } else {
-            // Tom mais esverdeado durante expiração
-            pwm_set_gpio_level(LED_PIN_RED, 0);
-            pwm_set_gpio_level(LED_PIN_GREEN, green_intensity + 20); // Um pouco mais de verde
-            pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity - 20);   // Um pouco menos de azul
-        }
-        
+        // O LED principal mantém intensidade constante (já configurado)
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(calm_patterns[pattern_index], matrix_intensity);
-    } else {
-        // LED principal em azul/verde para respiração diafragmática
-        pwm_set_gpio_level(LED_PIN_RED, 0);
-        pwm_set_gpio_level(LED_PIN_BLUE, intensity);
-        pwm_set_gpio_level(LED_PIN_GREEN, intensity);
+    }
+    else if (current_breathing_type == BREATHING_SQUARE) {
+        if (intensity < 85) {
+            pattern_index = 0;
+        } else if (intensity < 170) {
+            pattern_index = 1;
+        } else {
+            pattern_index = 2;
+        }
         
+        // O LED principal mantém intensidade constante (já configurado)
+        uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
+        update_matrix_pattern(square_patterns[pattern_index], matrix_intensity);
+    }
+    else { // BREATHING_DIAPHRAGMATIC
+        if (intensity < 85) {
+            pattern_index = 0;
+        } else if (intensity < 170) {
+            pattern_index = 1;
+        } else {
+            pattern_index = 2;
+        }
+        
+        // O LED principal mantém intensidade constante (já configurado)
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(circle_patterns[pattern_index], matrix_intensity);
     }

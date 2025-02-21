@@ -9,6 +9,7 @@
 #include "ssd1306.h"
 #include "breathing_routines.h"
 #include "ws2812.pio.h"
+#include "noise_detection.h"
 
 // Constantes para o display
 #define MAX_CHARS_PER_LINE 16
@@ -21,6 +22,9 @@ void to_uppercase(char* str);
 void write_centered_text(ssd1306_t *ssd, const char* text);
 void write_multiline_text(ssd1306_t *ssd, const char* line1, const char* line2);
 void show_splash_screen(ssd1306_t *ssd);
+bool detect_loud_noise(void);
+void display_noise_warning(ssd1306_t *ssd);
+bool check_environment_before_routine(ssd1306_t *ssd);
 
 // Implementação da função para converter texto para maiúsculo
 void to_uppercase(char* str) {

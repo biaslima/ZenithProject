@@ -11,6 +11,7 @@
 #define BTN_PIN_A 5
 #define BTN_PIN_B 6
 #define MIC_PIN 28
+#define JOYSTICK_BTN_PIN 22 
 
 // Outras definições...
 // Pinos e variáveis display
@@ -43,6 +44,10 @@ extern volatile bool btn_b_ativo;
 extern volatile uint16_t ambient_noise_level;
 extern volatile uint32_t last_interrupt_time_A;
 extern volatile uint32_t last_interrupt_time_B;
+
+// Definições para detecção de ruído pelo microfone
+#define MIC_THRESHOLD 2700  // Valor de threshold para ruído alto (ajuste conforme necessário)
+#define MIC_SAMPLES 200         // Número de amostras para verificar o ruído
 
 #endif // CONFIG_H
 

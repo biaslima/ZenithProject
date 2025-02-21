@@ -18,5 +18,5 @@ void clear_all_leds(void);
 void animate_calm_breath_in(uint32_t duration);
 void animate_calm_breath_out(uint32_t duration);
 void animate_calm_breath_hold(uint32_t duration, uint8_t base_intensity);
-
+void set_main_led_for_breathing_type(breathing_type_t type);
 #endif
