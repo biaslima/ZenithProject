@@ -63,6 +63,33 @@ const bool square_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
     }
 };
 
+const bool calm_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
+    // Primeira onda (mais estreita)
+    {
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0},
+        {1, 0, 0, 0, 1},
+        {0, 1, 1, 1, 0}
+    },
+    // Segunda onda (média)
+    {
+        {0, 0, 0, 0, 0},
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1},
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1}
+    },
+    // Terceira onda (expansão máxima)
+    {
+        {1, 0, 1, 0, 1},
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1},
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1}
+    }
+};
+
 // Função auxiliar para atualizar a matriz
 static void update_matrix_pattern(const bool pattern[MATRIX_SIZE][MATRIX_SIZE], uint8_t intensity) {
     uint32_t color;
@@ -117,6 +144,16 @@ void update_led_animation(uint8_t intensity, bool breathing_in) {
         
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(square_patterns[pattern_index], matrix_intensity);
+    } else if (current_breathing_type == BREATHING_CALM) {
+        // LED principal em azul para respiração calmante 4-7-8 (ondas azuis)
+        uint8_t blue_intensity = intensity;
+        uint8_t green_intensity = intensity / 4;  // Uma pequena quantidade de verde para dar um tom azul oceano
+        pwm_set_gpio_level(LED_PIN_RED, 0);
+        pwm_set_gpio_level(LED_PIN_GREEN, green_intensity);
+        pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity);
+        
+        uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
+        update_matrix_pattern(calm_patterns[pattern_index], matrix_intensity);
     } else {
         // LED principal em azul/verde para respiração diafragmática
         pwm_set_gpio_level(LED_PIN_RED, 0);

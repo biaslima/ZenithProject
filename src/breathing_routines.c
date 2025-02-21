@@ -165,3 +165,48 @@ void square_breathing(ssd1306_t *ssd) {
     
     breathing_routine(ssd, &params);
 }
+
+void calm_breathing(ssd1306_t *ssd) {
+    current_breathing_type = BREATHING_CALM;
+    breathing_params_t params = {
+        .type = BREATHING_CALM,
+        .inspire_time = 4000,    // 4 segundos
+        .expire_time = 8000,     // 8 segundos
+        .hold_time = 7000,       // 7 segundos
+        .cycles = 4,             // 4 ciclos inicialmente
+    };
+    
+    // Mostra título inicial
+    display_two_lines(ssd, "RESPIRACAO", "4-7-8");
+    sleep_ms(3000);
+    
+    // Acende LED central com intensidade baixa constante
+    set_main_led_brightness(32);
+    
+    // Executa os ciclos de respiração com animação de ondas
+    for (int cycle = 0; cycle < params.cycles; cycle++) {
+        // Inspiração - contagem até 4
+        display_wrapped_message(ssd, "INSPIRE PELO NARIZ... (4)");
+        animate_breath_in(params.inspire_time);
+        
+        // Retenção - contagem até 7
+        display_wrapped_message(ssd, "SEGURE... (7)");
+        
+        // Durante a retenção, mantém o LED aceso mas faz um efeito sutil de onda pulsante
+        for (int i = 0; i < 7; i++) {
+            // Pulsa sutilmente durante a retenção
+            uint8_t pulse_intensity = LED_MAX_BRIGHTNESS - (i * 5);
+            update_led_animation(pulse_intensity, false);
+            sleep_ms(1000); // 1 segundo por contagem
+        }
+        
+        // Expiração - contagem até 8
+        display_wrapped_message(ssd, "EXPIRE LENTAMENTE PELA BOCA... (8)");
+        animate_breath_out(params.expire_time);
+    }
+    
+    // Finalização
+    display_wrapped_message(ssd, "SESSAO CONCLUIDA");
+    sleep_ms(2000);
+    clear_all_leds();
+}

@@ -5,7 +5,8 @@
 
 typedef enum {
     BREATHING_DIAPHRAGMATIC,
-    BREATHING_SQUARE
+    BREATHING_SQUARE,
+    BREATHING_CALM
 } breathing_type_t;
 
 typedef struct {
@@ -20,5 +21,6 @@ extern breathing_type_t current_breathing_type;
 
 void diaphragmatic_breathing(ssd1306_t *ssd);
 void square_breathing(ssd1306_t *ssd);
+void calm_breathing(ssd1306_t *ssd);
 
 #endif

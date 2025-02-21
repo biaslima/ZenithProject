@@ -109,7 +109,7 @@ int main() {
                 square_breathing(&ssd);
                 break;
             case 3:
-                // square_breathing(&ssd);
+                calm_breathing(&ssd); 
                 break;
             default:
                 // Mostra título e instrução
