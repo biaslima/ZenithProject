@@ -2,6 +2,7 @@
 #define BREATHING_ROUTINES_H
 
 #include "ssd1306.h"
+#include "config.h"
 
 typedef enum {
     BREATHING_DIAPHRAGMATIC,
@@ -23,4 +24,4 @@ void diaphragmatic_breathing(ssd1306_t *ssd);
 void square_breathing(ssd1306_t *ssd);
 void calm_breathing(ssd1306_t *ssd);
 
-#endif
+#endif // BREATHING_ROUTINES_H

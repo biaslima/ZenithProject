@@ -3,16 +3,14 @@
 #include "config.h"
 #include <stdio.h> 
 
-volatile bool interrupt_routine = false;
-
 void button_callback(uint gpio, uint32_t events) {
     uint32_t current_time = to_us_since_boot(get_absolute_time());
     
-    if (gpio == BTN_PIN_A && current_time - last_interrupt_time_A > 200000) {
+    if (gpio == BTN_PIN_A && current_time - last_interrupt_time_A > DEBOUNCE_TIME_US) {
         last_interrupt_time_A = current_time;
         btn_a_ativo = true;
     } 
-    else if (gpio == BTN_PIN_B && current_time - last_interrupt_time_B > 200000) {
+    else if (gpio == BTN_PIN_B && current_time - last_interrupt_time_B > DEBOUNCE_TIME_US) {
         last_interrupt_time_B = current_time;
         btn_b_ativo = true;
     }

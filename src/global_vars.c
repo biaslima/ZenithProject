@@ -6,6 +6,6 @@ volatile bool btn_b_ativo = false;
 volatile uint16_t ambient_noise_level = 0;
 volatile uint32_t last_interrupt_time_A = 0;
 volatile uint32_t last_interrupt_time_B = 0;
+volatile bool interrupt_routine = false;
 
-uint32_t leds[NUM_LEDS]; 
-
+uint32_t leds[NUM_LEDS];
