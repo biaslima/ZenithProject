@@ -63,24 +63,40 @@ const bool square_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
     }
 };
 
-const bool calm_patterns[3][MATRIX_SIZE][MATRIX_SIZE] = {
-    // Primeira onda (mais estreita)
+const bool calm_patterns[5][MATRIX_SIZE][MATRIX_SIZE] = {
+    // Estágio 1 - Inicial (apenas centro)
     {
         {0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0},
         {0, 0, 1, 0, 0},
-        {1, 0, 0, 0, 1},
-        {0, 1, 1, 1, 0}
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}
     },
-    // Segunda onda (média)
+    // Estágio 2 - Expansão suave (padrão de diamante)
     {
         {0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0},
+        {0, 1, 1, 1, 0},
+        {0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0}
+    },
+    // Estágio 3 - Expansão média (forma fluida)
+    {
+        {0, 0, 1, 0, 0},
         {0, 1, 0, 1, 0},
         {1, 0, 1, 0, 1},
         {0, 1, 0, 1, 0},
-        {1, 0, 1, 0, 1}
+        {0, 0, 1, 0, 0}
     },
-    // Terceira onda (expansão máxima)
+    // Estágio 4 - Expansão maior (padrão de onda)
+    {
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1},
+        {0, 1, 0, 1, 0},
+        {1, 0, 1, 0, 1},
+        {0, 1, 0, 1, 0}
+    },
+    // Estágio 5 - Expansão completa (quase completa)
     {
         {1, 0, 1, 0, 1},
         {0, 1, 0, 1, 0},
@@ -144,13 +160,37 @@ void update_led_animation(uint8_t intensity, bool breathing_in) {
         
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(square_patterns[pattern_index], matrix_intensity);
-    } else if (current_breathing_type == BREATHING_CALM) {
-        // LED principal em azul para respiração calmante 4-7-8 (ondas azuis)
+    } else  if (current_breathing_type == BREATHING_CALM) {
+        // Mapeamento mais granular para a respiração calmante (5 estágios)
+        if (intensity < 51) {
+            pattern_index = 0;
+        } else if (intensity < 102) {
+            pattern_index = 1;
+        } else if (intensity < 153) {
+            pattern_index = 2;
+        } else if (intensity < 204) {
+            pattern_index = 3;
+        } else {
+            pattern_index = 4;
+        }
+        
+        // Cores azul-turquesa suaves para respiração calmante
+        // Criando um efeito de transição suave
         uint8_t blue_intensity = intensity;
-        uint8_t green_intensity = intensity / 4;  // Uma pequena quantidade de verde para dar um tom azul oceano
-        pwm_set_gpio_level(LED_PIN_RED, 0);
-        pwm_set_gpio_level(LED_PIN_GREEN, green_intensity);
-        pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity);
+        uint8_t green_intensity = intensity / 2;  // Turquesa suave
+        
+        // Aplica uma mudança sutil na cor durante inspiração vs. expiração
+        if (breathing_in) {
+            // Tom mais azulado durante inspiração
+            pwm_set_gpio_level(LED_PIN_RED, 0);
+            pwm_set_gpio_level(LED_PIN_GREEN, green_intensity);
+            pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity);
+        } else {
+            // Tom mais esverdeado durante expiração
+            pwm_set_gpio_level(LED_PIN_RED, 0);
+            pwm_set_gpio_level(LED_PIN_GREEN, green_intensity + 20); // Um pouco mais de verde
+            pwm_set_gpio_level(LED_PIN_BLUE, blue_intensity - 20);   // Um pouco menos de azul
+        }
         
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(calm_patterns[pattern_index], matrix_intensity);
@@ -162,6 +202,62 @@ void update_led_animation(uint8_t intensity, bool breathing_in) {
         
         uint8_t matrix_intensity = (intensity * LED_MATRIX_MAX_INTENSITY) / 255;
         update_matrix_pattern(circle_patterns[pattern_index], matrix_intensity);
+    }
+}
+// Funções auxiliares de animação específicas para calm_breathing
+
+// Animação especial fluida para inspiração
+void animate_calm_breath_in(uint32_t duration) {
+    // Maior número de passos para transição mais suave
+    const int steps = 100;
+    
+    for (int i = 0; i <= steps; i++) {
+        uint8_t intensity = (i * LED_MAX_BRIGHTNESS) / steps;
+        update_led_animation(intensity, true);
+        
+        // Intervalo variável - começa mais rápido e desacelera
+        uint16_t delay = (duration / steps) * (1 + (i / (float)steps) * 0.5);
+        sleep_ms(delay);
+    }
+}
+
+// Animação especial fluida para expiração
+void animate_calm_breath_out(uint32_t duration) {
+    // Maior número de passos para transição mais suave
+    const int steps = 100;
+    
+    for (int i = steps; i >= 0; i--) {
+        uint8_t intensity = (i * LED_MAX_BRIGHTNESS) / steps;
+        update_led_animation(intensity, false);
+        
+        // Intervalo variável - começa mais devagar e acelera levemente
+        uint16_t delay = (duration / steps) * (1 + ((steps - i) / (float)steps) * 0.2);
+        sleep_ms(delay);
+    }
+}
+
+// Animação especial para retenção respiratória (efeito ondulante)
+void animate_calm_breath_hold(uint32_t duration, uint8_t base_intensity) {
+    // Número de ondulações durante o período de retenção
+    const int num_waves = 7;  // Um para cada segundo
+    const int steps_per_wave = 20;
+    
+    for (int wave = 0; wave < num_waves; wave++) {
+        // Onda suave para cima
+        for (int i = 0; i < steps_per_wave/2; i++) {
+            // Pequena variação de intensidade (apenas 10%)
+            uint8_t intensity = base_intensity - (base_intensity * 0.1 * i / (steps_per_wave/2));
+            update_led_animation(intensity, false);
+            sleep_ms(duration / (num_waves * steps_per_wave));
+        }
+        
+        // Onda suave para baixo
+        for (int i = steps_per_wave/2; i > 0; i--) {
+            // Pequena variação de intensidade (apenas 10%)
+            uint8_t intensity = base_intensity - (base_intensity * 0.1 * i / (steps_per_wave/2));
+            update_led_animation(intensity, false);
+            sleep_ms(duration / (num_waves * steps_per_wave));
+        }
     }
 }
 

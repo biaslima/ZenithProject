@@ -100,7 +100,15 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
     // Mostra título inicial
     const char *title_parts[2];
     title_parts[0] = "RESPIRACAO";
-    title_parts[1] = params->type == BREATHING_DIAPHRAGMATIC ? "DIAFRAGMATICA" : "QUADRADA";
+    
+    // Determina qual o título baseado no tipo de respiração
+    if (params->type == BREATHING_DIAPHRAGMATIC) {
+        title_parts[1] = "DIAFRAGMATICA";
+    } else if (params->type == BREATHING_SQUARE) {
+        title_parts[1] = "QUADRADA";
+    } else if (params->type == BREATHING_CALM) {
+        title_parts[1] = "4-7-8";
+    }
     
     display_two_lines(ssd, title_parts[0], title_parts[1]);
     sleep_ms(3000);
@@ -117,7 +125,7 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
             
             display_wrapped_message(ssd, "EXPIRE...");
             animate_breath_out(params->expire_time);
-        } else {
+        } else if (params->type == BREATHING_SQUARE) {
             // Respiração Quadrada
             display_wrapped_message(ssd, "INSPIRE...");
             animate_breath_in(params->inspire_time);
@@ -130,6 +138,16 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
             
             display_wrapped_message(ssd, "MANTENHA VAZIO...");
             sleep_ms(params->hold_time);
+        } else if (params->type == BREATHING_CALM) {
+            // Respiração 4-7-8 com animações especiais
+            display_wrapped_message(ssd, "INSPIRE PELO NARIZ... (4)");
+            animate_calm_breath_in(params->inspire_time);
+            
+            display_wrapped_message(ssd, "SEGURE... (7)");
+            animate_calm_breath_hold(params->hold_time, LED_MAX_BRIGHTNESS);
+            
+            display_wrapped_message(ssd, "EXPIRE LENTAMENTE PELA BOCA... (8)");
+            animate_calm_breath_out(params->expire_time);
         }
     }
     
@@ -138,8 +156,7 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
     sleep_ms(2000);
     clear_all_leds();
 }
-
-// Funções principais de respiração
+// Função para respiração diafragmática
 void diaphragmatic_breathing(ssd1306_t *ssd) {
     current_breathing_type = BREATHING_DIAPHRAGMATIC;
     breathing_params_t params = {
@@ -153,6 +170,7 @@ void diaphragmatic_breathing(ssd1306_t *ssd) {
     breathing_routine(ssd, &params);
 }
 
+// Função para respiração quadrada
 void square_breathing(ssd1306_t *ssd) {
     current_breathing_type = BREATHING_SQUARE;
     breathing_params_t params = {
@@ -165,7 +183,7 @@ void square_breathing(ssd1306_t *ssd) {
     
     breathing_routine(ssd, &params);
 }
-
+// Nova versão da função calm_breathing 
 void calm_breathing(ssd1306_t *ssd) {
     current_breathing_type = BREATHING_CALM;
     breathing_params_t params = {
@@ -176,37 +194,5 @@ void calm_breathing(ssd1306_t *ssd) {
         .cycles = 4,             // 4 ciclos inicialmente
     };
     
-    // Mostra título inicial
-    display_two_lines(ssd, "RESPIRACAO", "4-7-8");
-    sleep_ms(3000);
-    
-    // Acende LED central com intensidade baixa constante
-    set_main_led_brightness(32);
-    
-    // Executa os ciclos de respiração com animação de ondas
-    for (int cycle = 0; cycle < params.cycles; cycle++) {
-        // Inspiração - contagem até 4
-        display_wrapped_message(ssd, "INSPIRE PELO NARIZ... (4)");
-        animate_breath_in(params.inspire_time);
-        
-        // Retenção - contagem até 7
-        display_wrapped_message(ssd, "SEGURE... (7)");
-        
-        // Durante a retenção, mantém o LED aceso mas faz um efeito sutil de onda pulsante
-        for (int i = 0; i < 7; i++) {
-            // Pulsa sutilmente durante a retenção
-            uint8_t pulse_intensity = LED_MAX_BRIGHTNESS - (i * 5);
-            update_led_animation(pulse_intensity, false);
-            sleep_ms(1000); // 1 segundo por contagem
-        }
-        
-        // Expiração - contagem até 8
-        display_wrapped_message(ssd, "EXPIRE LENTAMENTE PELA BOCA... (8)");
-        animate_breath_out(params.expire_time);
-    }
-    
-    // Finalização
-    display_wrapped_message(ssd, "SESSAO CONCLUIDA");
-    sleep_ms(2000);
-    clear_all_leds();
+    breathing_routine(ssd, &params);
 }

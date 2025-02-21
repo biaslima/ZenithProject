@@ -14,4 +14,9 @@ void update_led_animation(uint8_t intensity, bool breathing_in);
 void set_main_led_brightness(uint8_t brightness);
 void clear_all_leds(void);
 
+// Funções de animação para respiração calmante
+void animate_calm_breath_in(uint32_t duration);
+void animate_calm_breath_out(uint32_t duration);
+void animate_calm_breath_hold(uint32_t duration, uint8_t base_intensity);
+
 #endif
