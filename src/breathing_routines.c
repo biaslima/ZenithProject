@@ -39,7 +39,7 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
         return;
     }
     
-    // Configura o LED principal com a cor adequada e mantém constante
+    // Configura o LED principal 
     set_main_led_for_breathing_type(params->type);
     
     // Executa os ciclos de respiração
@@ -243,13 +243,12 @@ static void breathing_routine(ssd1306_t *ssd, const breathing_params_t *params) 
     return;
     
 routine_interrupted:
-    // Código para tratamento da interrupção
     display_multiline_text(ssd, "SESSAO\nCANCELADA");
     sleep_ms(2000);
     clear_all_leds();
 }
 
-// Funções públicas para as rotinas de respiração
+// Funções para as rotinas de respiração
 void diaphragmatic_breathing(ssd1306_t *ssd) {
     // Verifica se o ambiente está adequado primeiro
     if (!check_environment_before_routine(ssd)) {
@@ -269,7 +268,6 @@ void diaphragmatic_breathing(ssd1306_t *ssd) {
 }
 
 void square_breathing(ssd1306_t *ssd) {
-    // Verifica se o ambiente está adequado primeiro
     if (!check_environment_before_routine(ssd)) {
         return;
     }
@@ -287,7 +285,6 @@ void square_breathing(ssd1306_t *ssd) {
 }
 
 void calm_breathing(ssd1306_t *ssd) {
-    // Verifica se o ambiente está adequado primeiro
     if (!check_environment_before_routine(ssd)) {
         return;
     }

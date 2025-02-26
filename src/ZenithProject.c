@@ -17,7 +17,6 @@ int main() {
     ssd1306_init(&ssd, DISPLAY_WIDTH, DISPLAY_HEIGHT, false, I2C_DISPLAY_ADDR, I2C_PORT);
     ssd1306_config(&ssd);
     
-    // Mostrar tela inicial
     show_splash_screen(&ssd);
     
     while (true) {
@@ -34,7 +33,6 @@ int main() {
                 calm_breathing(&ssd); 
                 break;
             default:
-                // Mostra título e instrução
                 display_two_lines(&ssd, "ZENITH PROJECT", "ESCOLHA O MODO");
                 sleep_ms(100);
                 break;

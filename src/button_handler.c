@@ -24,7 +24,7 @@ void button_callback(uint gpio, uint32_t events) {
 void setup_button_interrupts(void) {
     gpio_set_irq_enabled_with_callback(BTN_PIN_A, GPIO_IRQ_EDGE_FALL, true, &button_callback);
     
-    // Configure os outros botões apenas com enabled (mesma função de callback)
+    // Configura os outros botões apenas com enabled (mesma função de callback)
     gpio_set_irq_enabled(BTN_PIN_B, GPIO_IRQ_EDGE_FALL, true);
     
     // Configure o botão do joystick

@@ -10,14 +10,14 @@ static uint32_t led_matrix[NUM_LEDS];
 
 // Função para configurar o LED principal com cores específicas para cada tipo de respiração
 void set_main_led_for_breathing_type(breathing_type_t type) {
-    uint8_t intensity = 64;  // Intensidade constante e suave (1/4 da máxima)
+    uint8_t intensity = 64;  
     
     switch (type) {
         case BREATHING_DIAPHRAGMATIC:
             // Azul esverdeado para respiração diafragmática
             pwm_set_gpio_level(LED_PIN_RED, 0);
             pwm_set_gpio_level(LED_PIN_GREEN, intensity);
-            pwm_set_gpio_level(LED_PIN_BLUE, intensity + 20);  // Um pouco mais de azul
+            pwm_set_gpio_level(LED_PIN_BLUE, intensity + 20);  
             break;
             
         case BREATHING_SQUARE:
@@ -30,7 +30,7 @@ void set_main_led_for_breathing_type(breathing_type_t type) {
         case BREATHING_CALM:
             // Verde azulado para respiração 4-7-8
             pwm_set_gpio_level(LED_PIN_RED, 0);
-            pwm_set_gpio_level(LED_PIN_GREEN, intensity + 20);  // Um pouco mais de verde
+            pwm_set_gpio_level(LED_PIN_GREEN, intensity + 20);  
             pwm_set_gpio_level(LED_PIN_BLUE, intensity);
             break;
             

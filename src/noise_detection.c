@@ -13,7 +13,7 @@ bool detect_loud_noise(void) {
     uint16_t max_value = 0;
     uint16_t sample;
     
-    // Seleciona a entrada do ADC para o microfone
+
     adc_select_input(2);  
     
     // Coleta várias amostras do microfone
@@ -89,8 +89,8 @@ bool check_environment_before_routine(ssd1306_t *ssd) {
     // Verifica se o ambiente está barulhento
     if (detect_loud_noise()) {
         display_noise_warning(ssd);
-        return false;  // Ambiente não está adequado
+        return false;  
     }
     
-    return true;  // Ambiente está adequado
+    return true; 
 }
